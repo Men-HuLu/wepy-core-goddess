@@ -1,0 +1,19 @@
+var showPhone = function (phone) {
+  var regexp = getRegExp("^1\d{10}$")
+  if (!(regexp.test(phone))) {
+    return phone
+  }
+  var head = phone.toString().substring(0, 3)
+  var foot = phone.toString().substring(7)
+  var newPhone = head.concat("****").concat(foot)
+  return newPhone
+}
+
+var showDate = function (date) {
+  return date.substring(0, 10)
+}
+
+module.exports = {
+  showPhone: showPhone,
+  showDate: showDate
+};

@@ -1,0 +1,219 @@
+<style lang="less">
+  @import './colorui/animation';
+  @import './colorui/icon';
+  @import './colorui/main';
+
+  @import './styles/base';
+  @import './styles/color';
+
+  .container {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: space-between;
+    box-sizing: border-box;
+  }
+</style>
+
+<script>
+  import wepy from '@wepy/core';
+  import promisify from '@wepy/use-promisify';
+  import eventHub from './common/eventHub';
+  import api, { url } from './config/api';
+  import wxHelper from './utils/wxHelper';
+  import { setBase, setTemp } from './config/storage';
+  import util from './utils/util';
+
+  wepy.use(promisify);
+
+  wepy.app({
+    hooks: {},
+
+    globalData: {
+      key: '',
+      session: '',
+      userInfo: {},
+      sign: '',
+      priceRate: 0,
+      cart: 0,
+      menu: [],
+      coupon: {},
+      barSize: {
+        statusBar: 0,
+        customBar: 0,
+        custom: 0
+      },
+      ossAuthPersist: {}
+    },
+
+    async onLaunch(e) {
+      wxHelper.update();
+      eventHub.$on('requst', header => {
+        header.DateTime = new Date().toGMTString();
+        header.Authorization = this.$options.globalData.session;
+        header.User = this.$options.globalData.key;
+        return header;
+      });
+      this.measure();
+      let param = this.analy(e.query);
+      let rsp = await this.onLogin(param);
+      await this.success(rsp.data);
+      await this.mineInfo();
+    },
+
+    methods: {
+      measure() {
+        let e = wx.getSystemInfoSync();
+        let custom = wx.getMenuButtonBoundingClientRect();
+        this.$options.globalData.barSize = {
+          statusBar: e.statusBarHeight,
+          customBar: custom.bottom + custom.top - e.statusBarHeight,
+          custom: custom
+        };
+      },
+      analy(query) {
+        let keys = Object.keys(query).filter(r => r !== 'scene');
+        if (keys.length > 0) {
+          return query;
+        } else if (query.scene) {
+          let res = util.urlConvertObj(query.scene);
+          return res;
+        } else {
+          return {};
+        }
+      },
+      async onLogin(param) {
+        try {
+          let result = await wxHelper.login();
+          if (result.errMsg !== 'login:ok') {
+            throw new Error(result.errMsg);
+          }
+          let rsp = await api.loginGet(result.code, param.t, param.v);
+          if (!rsp || rsp.statusCode !== 200) {
+            throw new Error(rsp.data);
+          }
+          return rsp;
+        } catch (e) {
+          let { confirm } = await wxHelper.showModal({
+            content: '登陆失败，点击确定重新登录',
+            showCancel: false
+          });
+          if (confirm) {
+            let rsp = await this.onLogin(param);
+            return rsp;
+          }
+        }
+      },
+      async success(data) {
+        url.host = data.endpoint.main;
+        setBase(data.endpoint.resource);
+        setTemp(data.endpoint.temp);
+        this.$options.globalData.key = data.key;
+        this.$options.globalData.session = data.session;
+        console.log('登录完成');
+      },
+      async mineInfo() {
+        let rsp = await api.getMine();
+        this.$options.globalData.priceRate = rsp.data.price_rate;
+        this.$options.globalData.sign = rsp.data.sign;
+        this.$options.globalData.userInfo = {
+          id: rsp.data.id,
+          name: rsp.data.name,
+          avatar: rsp.data.avatar,
+          phone: rsp.data.phone
+        };
+        this.$options.globalData.coupon = rsp.data.coupon;
+        this.$options.globalData.cart = rsp.data.cart;
+        this.$options.globalData.menu = rsp.data.menu;
+        wx.setTabBarBadge({
+          index: 2,
+          text: String(this.$options.globalData.cart)
+        });
+      }
+    }
+  });
+</script>
+<config>
+{
+    pages: [
+      'pages/tabIndex/tabIndex',
+      'pages/tabShop/tabShop',
+      'pages/tabShopCart/tabShopCart',
+      'pages/tabMy/tabMy',
+      'pages/payment/payment',
+      'pages/invitation/invitation',
+      'pages/previewPic/previewPic',
+      'pages/product/product',
+    ],
+    subpackages:[
+      {
+        'root':'pageIndex',
+        'pages':[
+          'previewCurtain/previewCurtain'
+        ]
+      },{
+        'root':'pageMy',
+        'pages':[
+          'bindPhone/bindPhone',
+          'ticket/ticket',
+          'collection/collection',
+          'orderInfo/orderInfo'
+        ]
+      }
+    ],
+    preloadRule:{
+      'pages/tabIndex/tabIndex':{
+        'network':'all',
+        'packages':['pageIndex']
+      },
+      'pages/tabMy/tabMy':{
+        'network':'all',
+        'packages':['pageMy']
+      }
+    },
+    window: {
+      backgroundTextStyle: 'dark',
+      navigationBarBackgroundColor: '#ec6867',
+      navigationStyle: 'custom'
+    },
+    tabBar: {
+      color: '#707070',
+      selectedColor: '#ec6867',
+      borderStyle: 'white',
+      backgroundColor: '#fff',
+      list: [
+        {
+          iconPath: './resources/tab/recommend.png',
+          selectedIconPath: './resources/tab/recommend_select.png',
+          pagePath: 'pages/tabIndex/tabIndex',
+          text: '首页'
+        },
+        {
+          iconPath: './resources/tab/shop.png',
+          selectedIconPath: './resources/tab/shop_select.png',
+          pagePath: 'pages/tabShop/tabShop',
+          text: '商户'
+        },
+        {
+          iconPath: './resources/tab/order.png',
+          selectedIconPath: './resources/tab/order_select.png',
+          pagePath: 'pages/tabShopCart/tabShopCart',
+          text: '购物车'
+        },
+        {
+          iconPath: './resources/tab/my.png',
+          selectedIconPath: './resources/tab/my_select.png',
+          pagePath: 'pages/tabMy/tabMy',
+          text: '我的'
+        }
+      ]
+    },
+    networkTimeout: {
+      request: 15000,
+      connectSocket: 15000,
+      uploadFile: 15000,
+      downloadFile: 15000
+    }
+}
+</config>

@@ -1,0 +1,206 @@
+<style lang="less">
+  page {
+    background-color: #fff;
+  }
+
+  .title {
+    display: block;
+    text-align: center;
+    margin: 20rpx auto;
+  }
+
+  .content {
+    margin: 50rpx 50rpx 0 50rpx;
+  }
+
+  .text-margin {
+    display: block;
+    margin-bottom: 30rpx;
+  }
+
+  .option-btn {
+    width: 100%;
+    height: 80rpx;
+    margin-top: 60rpx;
+    line-height: 80rpx;
+    border-radius: 4px;
+    text-align: center;
+  }
+
+  input {
+    width: 300rpx;
+  }
+
+  .input {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+    height: 100%;
+  }
+
+  .input-text {
+    display: block;
+    width: 130rpx;
+    text-align: left;
+  }
+
+  .code {
+    width: 200rpx;
+    height: 50rpx;
+    line-height: 50rpx;
+    text-align: center;
+    border: 1px solid;
+    border-radius: 10rpx;
+    color: #ec6867;
+  }
+
+  .under-line {
+    height: 100rpx;
+    border-bottom: 1rpx solid #ececec;
+  }
+</style>
+
+<template>
+  <view>
+    <navigationBar bgColor="back-col1"
+                   isBack="{{true}}">
+      <view slot="content">
+        <text class="text-col">绑定手机号</text>
+      </view>
+    </navigationBar>
+    <text class="title fz32 c333"
+          style="margin-top: 30rpx">请关联您的手机号以便于查询您的订单。</text>
+    <view class="content">
+      <view class="row-l under-line">
+        <text class="input-text fz30 c333">手机号:</text>
+        <input @input="inputPhone"
+               placeholder="请输入手机号"
+               type="number"
+               maxlength="11"
+               class="fz30 c333"
+               value="{{phone}}" />
+      </view>
+      <view class="input under-line">
+        <view class="row-l">
+          <text class="input-text fz30 c333">验证码:</text>
+          <input @input="inputCode"
+                 placeholder="请输入验证码"
+                 type="number"
+                 maxlength="6"
+                 class="fz30 c333"
+                 value="{{code}}" />
+        </view>
+        <label class="code fz28"
+               @tap="sendCode">{{currentTime}}</label>
+      </view>
+      <button class="option-btn fz32 cfff"
+              style="background-color: #ec6867"
+              v-on:click="bind">关联手机号</button>
+    </view>
+  </view>
+</template>
+
+<script>
+  import wepy from '@wepy/core';
+  import api from '../../config/api';
+  import util from '../../utils/util';
+
+  wepy.page({
+    id: 0,
+
+    data: {
+      sign: '绑定手机号',
+      phone: undefined,
+      code: undefined,
+      currentTime: '获取验证码'
+    },
+
+    methods: {
+      inputPhone(e) {
+        let { detail } = e.$wx;
+        this.phone = detail.value;
+      },
+      inputCode(e) {
+        let { detail } = e.$wx;
+        this.code = detail.value;
+      },
+      async sendCode() {
+        if (this.currentTime !== '获取验证码') {
+          return;
+        }
+        if (!util.isPhone(this.phone)) {
+          wx.showToast({
+            title: '请输入正确的手机号',
+            icon: 'none'
+          });
+          return;
+        }
+        // 倒计时方法
+        let time = 60;
+        this.currentTime = `${time}S`;
+        let interval = setInterval(
+          function (app) {
+            time--;
+            if (time === 0 || app.currentTime === '获取验证码') {
+              app.currentTime = '获取验证码';
+              clearInterval(interval);
+            } else {
+              app.currentTime = `${time}S`;
+            }
+          },
+          1000,
+          this
+        );
+        let rsp = await api.getCode(this.phone);
+        if (rsp.statusCode === 200) {
+          this.$options.id = rsp.data;
+          wx.showToast({
+            title: '验证码已发送',
+            icon: 'succcess'
+          });
+        }
+      },
+      async bind() {
+        if (!util.isPhone(this.phone)) {
+          wx.showToast({
+            title: '请输入正确的手机号',
+            icon: 'none'
+          });
+          return;
+        }
+        let rsp = await api.modifyPhone2(this.$options.id, this.code);
+        if (rsp.statusCode === 200) {
+          wx.showToast({
+            title: '验证码已发送',
+            icon: 'succcess'
+          });
+          this.$app.$options.globalData.userInfo.phone = rsp.data;
+          this.phone = '';
+          this.code = '';
+          this.$options.id = 0;
+          this.currentTime = '获取验证码';
+          util.sleep(1000);
+          wx.navigateBack({});
+        }
+      }
+    },
+
+    onShareAppMessage() {
+      let id = this.$app.$options.globalData.userInfo.id;
+      return {
+        title: '女神家',
+        path: `/pages/tabIndex/tabIndex?t=f&v=${id}`
+      };
+    }
+  });
+</script>
+
+<config>
+{
+    usingComponents: {
+      navigationBar: '~@/components/navigationBar/navigationBar',
+    }
+}
+</config>

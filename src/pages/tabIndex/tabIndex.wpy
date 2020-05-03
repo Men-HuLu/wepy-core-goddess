@@ -1,0 +1,414 @@
+<style lang="less">
+  page {
+    background-color: #fff;
+  }
+
+  .card-swiper {
+    height: 338rpx !important;
+  }
+
+  .card-swiper swiper-item {
+    padding: 20rpx 0rpx 10rpx;
+  }
+
+  .around {
+    justify-content: space-around !important;
+  }
+
+  .between {
+    width: 100%;
+    justify-content: space-between !important;
+  }
+
+  .detail-left {
+    margin-left: 10rpx;
+  }
+
+  .detail-right {
+    margin-right: 10rpx;
+  }
+
+  .detail {
+    width: 340rpx;
+    margin-top: 20rpx;
+    border-radius: 12rpx;
+    overflow: hidden;
+    box-shadow: 0px 0px 8rpx 8rpx #eee;
+  }
+
+  .detail-pic {
+    width: 100%;
+  }
+
+  .detail-describe {
+    padding: 16rpx 20rpx;
+  }
+
+  .detail-love {
+    padding: 10rpx 10rpx 0 20rpx;
+  }
+
+  .title {
+    padding-left: 30rpx;
+  }
+
+  .advertising {
+    width: 690rpx;
+    height: 200rpx;
+    margin-top: 12rpx;
+  }
+
+  .canvasmodal {
+    width: 600rpx;
+    border-radius: 6rpx;
+    z-index: 4;
+  }
+
+  .canvasmodal-top {
+    width: 100%;
+  }
+
+  .coupon {
+    width: 256rpx;
+    height: 194rpx;
+    font-size: 160rpx;
+    color: #e8140c;
+    margin-top: -430rpx;
+  }
+
+  .receive {
+    width: 350rpx;
+    height: 82rpx;
+    margin-top: 50rpx;
+    color: #ee2737;
+    background-image: linear-gradient(180deg, #ffee59 0%, #ffbc08 100%);
+    border-radius: 20rpx;
+  }
+  .tab-select {
+    color: #ec6867;
+  }
+
+  .menu {
+    width: 100%;
+    position: fixed;
+    z-index: 999;
+  }
+
+  .second-menu {
+    padding: 10rpx 0;
+  }
+  .ofx-scroll {
+    overflow: scroll;
+    height: 60rpx;
+  }
+
+  .menund {
+    margin-left: 28rpx;
+  }
+
+  [class*='cuIcon-'] {
+    font-size: 50rpx !important;
+  }
+</style>
+
+<template>
+  <view>
+    <navigation bgColor="back-col1">
+      <view slot="content">
+        <text class="text-col fz36">{{sign}}</text>
+      </view>
+    </navigation>
+
+    <view class="menu back-col">
+      <tabTop :tabs="tabs"
+              :currentTab.sync="currentTab"
+              @tab-change="tabChange" />
+      <view class="row-l second-menu ofx-scroll">
+        <view v-for="(item,index) in tabs2"
+              class="fz28 c666 nav menund {{index===currentTab2?'tab-select':''}}"
+              v-on:click.stop="tabs2Change({item,index})">{{item}}</view>
+      </view>
+    </view>
+    <!-- <swiper class="card-swiper {{DotStyle?'square-dot':'round-dot'}}"
+              indicator-dots="true"
+              circular="true"
+              autoplay="true"
+              interval="5000"
+              duration="500"
+              bindchange="cardSwiper"
+              indicator-color="#8799a3"
+              indicator-active-color="#0081ff">
+        <swiper-item v-for="item,index in banner"
+                     class="{{cardCur==index?'cur':''}}">
+          <view class="swiper-item">
+            <image src="{{swiperBase}}{{item}}"
+                   mode="aspectFill" />
+          </view>
+        </swiper-item>
+      </swiper> -->
+    <view style="margin-top: 128rpx;" />
+    <view v-if="isCoupon"
+          v-on:click="showModal">
+      <view class="row">
+        <img class="advertising"
+             src="{{coupon.pic?temp:''}}{{coupon.pic}}" />
+      </view>
+    </view>
+
+    <view class="row around vertical-lt">
+      <view class="col detail-left">
+        <view v-for="item,index in details.leftUrl"
+              class="detail back-col"
+              v-on:click.stop="toProduct(item)">
+          <image lazy-load="{{true}}"
+                 class="detail-pic"
+                 mode="widthFix"
+                 src="{{base}}{{item.pic}}" />
+          <view class="col vertical-lt detail-describe">
+            <view>{{item.name}}</view>
+            <view class="row between">
+              <view class="fz40">￥{{item.price*priceRate}}</view>
+            </view>
+          </view>
+        </view>
+      </view>
+      <view class="col detail-right">
+        <view v-for="item,index in details.rightUrl"
+              class="detail back-col"
+              v-on:click.stop="toProduct(item)">
+          <image v-if="index===0"
+                 lazy-load="{{true}}"
+                 class="detail-pic"
+                 style="height:550rpx"
+                 mode="aspectFill"
+                 src="{{base}}{{item.pic}}" />
+          <image v-if="index!==0"
+                 lazy-load="{{true}}"
+                 class="detail-pic"
+                 mode="widthFix"
+                 src="{{base}}{{item.pic}}" />
+          <view class="col vertical-lt detail-describe">
+            <view>{{item.name}}</view>
+            <view class="row between">
+              <view class="fz40">￥{{item.price*priceRate}}</view>
+            </view>
+          </view>
+        </view>
+      </view>
+    </view>
+
+    <bottomLine v-if="bottomDisplay" />
+
+    <modal :visible.sync="isHide"
+           @modal-close="modalClose">
+      <view class="col canvasmodal">
+        <view class="row-r canvasmodal-top">
+          <text class="cuIcon-close lg row"
+                v-on:click="hideModel"
+                style="width: 48rpx;height: 48rpx;"></text>
+        </view>
+        <image src="../../resources/image/voucher.png"
+               mode="widthFix"
+               style="width: 700rpx;z-index:-1;" />
+        <view class="row coupon">{{coupon.value}}{{coupon.unit}}</view>
+        <button v-if="phone"
+                class="row receive fz32"
+                v-on:click="receive">点击领取</button>
+        <button v-else
+                class="row receive fz32"
+                open-type="getPhoneNumber"
+                bindgetphonenumber="getPhoneNumber">点击领取</button>
+      </view>
+    </modal>
+  </view>
+</template>
+
+<script>
+  import wepy from '@wepy/core';
+  import api, { url } from '../../config/api';
+  import { getTemp, getBase } from '../../config/storage';
+  import util from '../../utils/util';
+  import wxHelper from '../../utils/wxHelper';
+
+  wepy.page({
+    data: {
+      tabs: [],
+      currentTab: 0,
+      tabs2: [],
+      currentTab2: 0,
+      menuData: [],
+      bottomDisplay: true,
+
+      sign: '',
+      priceRate: 0,
+      coupon: {},
+      DotStyle: true,
+      cardCur: 0,
+      base: '',
+      temp: '',
+      banner: [],
+      details: {
+        leftUrl: [],
+        rightUrl: []
+      },
+      phone: '',
+      isHide: false,
+      isCoupon: false
+    },
+    onLoad(e) {
+      this.onPageLoad();
+    },
+    async onShow() {
+      while (this.$app.$options.globalData.menu.length <= 0) {
+        await util.sleep(1000);
+      }
+      let cartText = this.$app.$options.globalData.cart;
+      wx.setTabBarBadge({
+        index: 2,
+        text: String(cartText)
+      });
+      this.coupon = this.$app.$options.globalData.coupon;
+      if (this.coupon) {
+        this.isCoupon = true;
+      }
+    },
+    methods: {
+      async onPageLoad() {
+        while (this.$app.$options.globalData.menu.length <= 0) {
+          await util.sleep(1000);
+        }
+        this.sign = this.$app.$options.globalData.sign;
+        this.priceRate = this.$app.$options.globalData.priceRate;
+        this.phone = this.$app.$options.globalData.userInfo.phone;
+        this.coupon = this.$app.$options.globalData.coupon;
+        this.base = `${getBase()}/resource/`;
+        this.temp = `${getTemp()}/wx/`;
+        if (this.coupon) {
+          this.isHide = true;
+        }
+        await this.getMenu();
+        await this.getIndex();
+      },
+      async tabChange(e) {
+        const { index } = e;
+        if (this.currentTab === index) {
+          return;
+        }
+        this.currentTab = index;
+        this.tabs2 = this.menuData.filter(
+          (menuItem, menuIndex) => menuIndex === index
+        )[0].submenu;
+        this.currentTab2 = 0;
+        await this.getIndex();
+      },
+      async tabs2Change(e) {
+        const { index } = e;
+        if (this.currentTab2 === index) {
+          return;
+        }
+        this.currentTab2 = index;
+        await this.getIndex();
+      },
+      showModal() {
+        this.isHide = true;
+      },
+      hideModel() {
+        this.isHide = false;
+      },
+      modalClose() {
+        this.isHide = false;
+      },
+      cardSwiper(e) {
+        this.cardCur = e.$wx.detail.current;
+      },
+      async getMenu() {
+        this.menuData = this.$app.$options.globalData.menu;
+        this.tabs = this.menuData.map(element => element.menu);
+        this.tabs2 = this.menuData[this.currentTab].submenu;
+      },
+      async getIndex() {
+        const menu = this.tabs[this.currentTab];
+        const sub = this.tabs2[this.currentTab2];
+        let rsp = await api.customIndex(menu, sub);
+        if (rsp.statusCode === 200) {
+          let { items } = rsp.data;
+          items.forEach(element => {
+            element.price = Math.floor(element.price * this.priceRate);
+          });
+          let leftArr = [];
+          let rightArr = [];
+          for (let item of items.entries()) {
+            if (item[0] % 2 === 0) {
+              leftArr.push(item[1]);
+            } else {
+              rightArr.push(item[1]);
+            }
+          }
+          this.details.leftUrl = leftArr;
+          this.details.rightUrl = rightArr;
+        }
+        wx.pageScrollTo({
+          scrollTop: 0
+        });
+      },
+
+      async getPhoneNumber(e) {
+        if (e.$wx.detail.errMsg !== 'getPhoneNumber:ok') {
+          await wxHelper.showToast({
+            title: e.$wx.detail.errMsg,
+            icon: 'none'
+          });
+        } else {
+          const { encryptedData, iv } = e.$wx.detail;
+          let rsp = await api.modifyPhone(encryptedData, iv);
+          if (rsp.statusCode === 200) {
+            await this.receive();
+          }
+        }
+      },
+      async receive() {
+        // api领券
+        const couponId = this.coupon.id;
+        let rsp = await api.postCoupon(couponId);
+        if (rsp.statusCode === 204) {
+          this.isHide = false;
+          this.isCoupon = false;
+          this.$app.$options.globalData.coupon = null;
+        }
+      },
+      toProduct(e) {
+        wxHelper.navigateTo('../product/product', {
+          id: e.product,
+          type: e.type,
+          kind: e.kind
+        });
+      }
+    },
+
+    async onPullDownRefresh() {
+      this.onPageLoad();
+      await util.sleep(1000);
+      wx.stopPullDownRefresh();
+    },
+
+    onShareAppMessage() {
+      let id = this.$app.$options.globalData.userInfo.id;
+      return {
+        title: '女神家',
+        path: `/pages/tabIndex/tabIndex?t=f&v=${id}`
+      };
+    }
+  });
+</script>
+
+<config>
+{
+    usingComponents: {
+      navigation: '~@/components/navigationBar/navigationBar',
+      bottomLine: '~@/components/bottom/bottomLine',
+      tabTop:'~@/components/tabTop/tabTop',
+      modal: '~@/components/modal/modal',
+    },
+    enablePullDownRefresh:true
+}
+</config>

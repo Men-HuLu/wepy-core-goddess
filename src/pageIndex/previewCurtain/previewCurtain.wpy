@@ -1,0 +1,44 @@
+<style lang="less">
+</style>
+
+
+<template>
+  <view>
+    <navigation
+      bgColor="back-col1"
+      isBack="{{true}}"
+    >
+      <view slot="content">
+        <text class="text-col">房间预览</text>
+      </view>
+    </navigation>
+    <web-view src="https://ax3.lijukeji.tech/?img={{img}}&id={{id}}"></web-view>
+    <!-- <web-view src="http://127.0.0.1:7002/?img={{img}}&id={{id}}"></web-view> -->
+  </view>
+</template>
+
+<script>
+import wepy from '@wepy/core';
+import wxHelper from '../../utils/wxHelper';
+
+wepy.page({
+  data: {
+    img: '',
+    id: 0
+  },
+
+  onLoad(e) {
+    this.img = e.background;
+    this.id = e.productId;
+  },
+
+  methods: {}
+});
+</script>
+<config>
+{
+    usingComponents: {
+      navigation: '~@/components/navigationBar/navigationBar',
+    }
+}
+</config>

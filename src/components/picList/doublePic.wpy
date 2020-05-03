@@ -1,0 +1,36 @@
+<style lang="less">
+  .p-width {
+    width: 100%;
+  }
+</style>
+
+<template>
+  <view class="row p-width"
+        v-for="(item,index) in pictures">
+    <view class="p-width"
+          v-for="(eleitem,eleIdx) in item.elements">
+      <image class="p-width"
+             style="display: block"
+             src="{{eleitem.pic}}"
+             mode="widthFix"
+             @tap.stop="test(eleitem.product_id)"></image>
+    </view>
+  </view>
+</template>
+
+<script>
+  import wepy from 'wepy';
+  wepy.component({
+    props: {
+      pictures: {
+        type: Array,
+        default: []
+      }
+    },
+    methods: {
+      test(id) {
+        this.$emit('detail-event', id);
+      }
+    }
+  });
+</script>

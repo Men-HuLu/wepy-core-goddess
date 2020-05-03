@@ -1,0 +1,30 @@
+<style lang="less">
+  .singPic {
+    width: 100%;
+    display: block;
+    border-radius: 20rpx;
+    margin-bottom: 20rpx;
+  }
+</style>
+
+<template>
+  <image class="singPic"
+         v-for="(item,index) in pictures"
+         src="{{item}}"
+         mode="widthFix"></image>
+</template>
+
+<script>
+  import wepy from '@wepy/core';
+  wepy.component({
+    options: {
+      multipleSlots: true // 在组件定义时的选项中启用多slot支持
+    },
+    props: {
+      pictures: {
+        type: Array,
+        default: []
+      }
+    }
+  });
+</script>

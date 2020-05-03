@@ -1,0 +1,123 @@
+<style lang="less">
+.body {
+  padding: 40rpx;
+}
+
+.body-title {
+  padding-bottom: 60rpx;
+}
+
+.body-input {
+  height: 100rpx;
+}
+
+.body-btn {
+  margin: 40rpx;
+}
+</style>
+
+<template>
+  <view>
+    <navigation bgColor="back-col1"
+                isHome="{{true}}">
+      <view slot="content">
+        <text class="text-col">充值</text>
+      </view>
+    </navigation>
+    <form @submit="pay">
+      <view class="col-t vertical-lt body back-col">
+        <view class="fz38 body-title"
+              type="number">
+          充值金额
+        </view>
+        <view class="row-l fz64">
+          ￥
+          <input class="body-input fz100"
+                 name="price" />
+        </view>
+      </view>
+      <view class="col-t vertical-lt body back-col"
+            style="margin-top:20rpx">
+        <view class="fz38 body-title"
+              type="number">
+          充值到
+        </view>
+        <view class="row-l fz48">
+          {{shopName}}
+        </view>
+      </view>
+      <button form-type="submit"
+              class="body-btn back-col1 text-col">支付</button>
+    </form>
+  </view>
+</template>
+
+<script>
+import wepy from '@wepy/core';
+import api, { url } from '../../config/api';
+import util from '../../utils/util';
+import wxHelper from '../../utils/wxHelper';
+
+wepy.page({
+  data: {
+    mch: 0,
+    shop: 0,
+    shopName: ''
+  },
+
+  async onLoad(e) {
+    while (!('host' in url)) {
+      await util.sleep(1000);
+    }
+    if (!e.s && !e.m) {
+      wxHelper.showToast({
+        title: '无转账人',
+        icon: 'none'
+      });
+      return;
+    }
+    this.mch = e.m;
+    this.shop = e.s;
+    await this.getPayment(e.s);
+  },
+
+  methods: {
+    async getPayment(shop) {
+      let rsp = await api.getPay(shop);
+      if (rsp.statusCode === 200) {
+        this.shopName = rsp.data;
+      }
+    },
+    async pay(e) {
+      if (!e.$wx.detail.value.price) {
+        wxHelper.showToast({
+          title: '请输入金额',
+          icon: 'none'
+        });
+        return;
+      }
+      let price = Number(e.$wx.detail.value.price) * 100;
+      let rsp = await api.postPay(this.mch, this.shop, price);
+      if (rsp.statusCode !== 200) {
+        return;
+      }
+      const { nonceStr, paySign, signType, timeStamp } = rsp.data;
+      const packAge = rsp.data.package;
+      let res = await wxHelper.requestPayment({
+        timeStamp,
+        nonceStr,
+        packAge,
+        signType,
+        paySign
+      });
+    }
+  }
+});
+</script>
+<config>
+{
+    usingComponents: {
+      navigation: '~@/components/navigationBar/navigationBar',
+    }
+}
+</config>

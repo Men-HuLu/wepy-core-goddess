@@ -1,0 +1,197 @@
+<style lang='less'>
+  .underline {
+    border-bottom: 1px solid #ccc;
+  }
+
+  .between {
+    justify-content: space-between;
+  }
+
+  .padding {
+    padding: 20rpx 0;
+  }
+
+  .modular {
+    width: 730rpx;
+    padding: 30rpx 10rpx;
+    margin-left: 20rpx;
+  }
+
+  .modular > image {
+    width: 80rpx;
+    margin: 0 20rpx;
+  }
+
+  .modular > view > image {
+    width: 80rpx;
+    margin: 0 20rpx;
+  }
+
+  .room {
+    padding: 30rpx 30rpx;
+    margin: 20rpx 0;
+  }
+
+  .room-text {
+    height: 60rpx;
+    line-height: 60rpx;
+    padding: 0 20px;
+    border-radius: 30rpx;
+    border: 1rpx solid #cccc;
+  }
+
+  .post {
+    padding: 0 20rpx;
+    height: 0rpx;
+    opacity: 0;
+  }
+
+  .post-left {
+    width: 180rpx;
+  }
+
+  .post-right {
+    width: 530rpx;
+  }
+</style>
+
+<wxs module="mywxs" lang="babel">
+var showDate = function (date) {
+  return date.substring(0, 10)
+}
+
+module.exports = {
+  showDate: showDate
+};
+</wxs>
+
+<template>
+  <view>
+    <navigationBar bgColor="back-col1"
+                   isBack="{{true}}">
+      <view slot="content">
+        <text class="text-col">订单详情</text>
+      </view>
+    </navigationBar>
+    <!-- 快递 -->
+    <view v-for="(item,index) in posts"
+          :key="postNumber"
+          class="col vertical-lt">
+      <view class="row between modular underline"
+            v-on:click.stop="show(index)">
+        <view class="row-l">
+          <image src="../../resources/assets/orderGroup1.png"
+                 mode="widthFix" />
+          <view class="col vertical-lt">
+            <view>{{item.department===1?'窗帘':'杆轨'}} {{item.state}}</view>
+            <view class="ellipsis-text c999">[{{item.company}}] {{item.postNumber}}</view>
+          </view>
+        </view>
+        <view class="cuIcon-right lg fz30" />
+      </view>
+      <view v-for="(infoItem,infoIdx) in item.postSteps"
+            class="row-l post"
+            :key="time"
+            animation="{{animations[index]}}">
+        <view class="post-left">
+          {{mywxs.showDate(infoItem.time)}}
+        </view>
+        <view class="post-right ellipsis-line">
+          {{infoItem.content}}
+        </view>
+      </view>
+    </view>
+    <!-- 信息 -->
+    <view class="row-l modular">
+      <image class="post-left"
+             src="../../resources/assets/orderGroup2.png"
+             mode="widthFix" />
+      <view class="post-right col vertical-lt">
+        <view>{{customer.custom_name}} {{customer.custom_mobile}}</view>
+        <view class="ellipsis-text c999 ">{{customer.custom_state}}{{customer.custom_city}}{{customer.custom_district}}{{customer.custom_address}}</view>
+      </view>
+    </view>
+    <!-- 房间 -->
+    <view v-for="(item,index) in products"
+          class="room back-col">
+      <view class="row between underline">
+        <text>{{item.room.name}}</text>
+        <text class="cccc">宽:{{item.room.width?item.room.width:''}} 高:{{item.room.height?item.room.height:''}}</text>
+      </view>
+      <view class="row between padding"
+            v-for="(pItem,pIndex) in item.product">
+        <view class="col vertical-lt">
+          <view>
+            {{pItem.name}}
+          </view>
+          <view class="cccc">
+            型号:{{pItem.sn}}
+          </view>
+        </view>
+        <view class="room-text text-col1">
+          {{pItem.process}}
+        </view>
+      </view>
+    </view>
+  </view>
+</template>
+
+<script>
+  import wepy from '@wepy/core';
+  import api from '../../config/api';
+
+  wepy.page({
+    data: {
+      customer: {},
+      products: [],
+      posts: [],
+      animation: undefined,
+      animations: [{}, {}, {}, {}],
+      animationShow: [false, false, false, false]
+    },
+    async onLoad(e) {
+      // let id = e.id;
+      console.log(e);
+      // 20658
+      let rsp = await api.readOrderId(20658);
+      if (rsp.statusCode === 200) {
+        let { customer, posts, products } = rsp.data;
+        this.customer = customer;
+        this.posts = posts;
+        this.products = products;
+      }
+      this.animation = wx.createAnimation({
+        duration: 800,
+        timingFunction: 'ease'
+      });
+    },
+    methods: {
+      show(id) {
+        if (this.animationShow[id]) {
+          this.animation
+            .height('0rpx')
+            .opacity(0)
+            .step();
+          this.animations[id] = this.animation.export();
+          this.animationShow[id] = false;
+        } else {
+          this.animation
+            .height('80rpx')
+            .opacity(1)
+            .step();
+          this.animations[id] = this.animation.export();
+          this.animationShow[id] = true;
+        }
+      }
+    }
+  });
+</script>
+
+<config>
+{
+    navigationBarTitleText: '订单详情',
+    usingComponents: {
+      navigationBar: '~@/components/navigationBar/navigationBar',
+    }
+}
+</config>

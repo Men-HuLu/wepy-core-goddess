@@ -1,0 +1,176 @@
+<style lang="less">
+  .title {
+    margin-top: 12rpx;
+  }
+
+  .body {
+    border-radius: 10rpx;
+    margin: 20rpx;
+    padding: 20rpx;
+  }
+
+  .image {
+    width: 180rpx;
+    height: 180rpx;
+    border-radius: 10rpx;
+  }
+
+  .order {
+    width: 100%;
+    margin-top: 14px;
+  }
+
+  .order-content {
+    width: 232rpx;
+    align-items: flex-end;
+  }
+
+  .watermark {
+    position: fixed;
+    margin-top: 200rpx;
+    width: 750rpx;
+  }
+
+  .delete {
+    margin-top: 10rpx;
+    margin-right: 10rpx;
+    font-size: 40rpx !important;
+  }
+</style>
+
+<template>
+  <view>
+    <navigationBar bgColor="back-col1">
+      <view slot="content">
+        <text class="text-col fz36">{{sign}}</text>
+      </view>
+    </navigationBar>
+    <view v-if="order.length===0"
+          class="col watermark">
+      <image src="../../resources/image/without-order.png"
+             mode="widthFix"
+             class="image" />
+      <text class="fz32 c666">您的购物车是空的哦~</text>
+      <text class="fz28 c666">快去加购吧~</text>
+    </view>
+    <view v-else
+          class="col body back-col vertical-lt">
+      <view class="fz32 title">购物车</view>
+      <view v-for="(item,index) in order"
+            class="order row flex-between"
+            v-on:click.stop="toProductInfo(item)">
+        <img class="image"
+             src="{{base}}{{item.content.pic}}" />
+        <view class="col vertical-rb flex-around">
+          <text class="fz34 c333">{{item.content.name}}</text>
+          <text class="fz28">￥{{item.content.price}}元/{{item.content.unit}}</text>
+          <view class="cuIcon-delete delete"
+                v-on:click.stop="deleteOrder(item)"></view>
+        </view>
+      </view>
+    </view>
+  </view>
+</template>
+
+<script>
+  import wepy from '@wepy/core';
+  import api from '../../config/api';
+  import { getBase } from '../../config/storage';
+  import wxHelper from '../../utils/wxHelper';
+
+  wepy.page({
+    data: {
+      sign: '',
+      base: '',
+      order: [],
+      priceRate: 0
+    },
+
+    onLoad(e) {
+      this.base = `${getBase()}/resource/`;
+      this.sign = this.$app.$options.globalData.sign;
+    },
+
+    onShow() {
+      this.priceRate = this.$app.$options.globalData.priceRate;
+      let cartText = this.$app.$options.globalData.cart;
+      wx.setTabBarBadge({
+        index: 2,
+        text: String(cartText)
+      });
+      this.getCart();
+    },
+
+    methods: {
+      async getCart() {
+        let rsp = await api.getCart();
+        this.order = rsp.data;
+        this.order.forEach(element => {
+          element.content.price = Math.floor(element.content.price * this.priceRate);
+        });
+        let unit = '';
+        this.order.forEach(element => {
+          switch (element.content.type) {
+            case '墙布':
+            case '功能帘':
+            case '飘窗垫':
+              unit = '平';
+              break;
+            case '成品':
+            case '抱枕套':
+              unit = '个';
+              break;
+            case '面料':
+            case '窗幔':
+            case '杆轨':
+            default:
+              unit = '米';
+              break;
+          }
+          element.content.unit = unit;
+        });
+      },
+
+      toProductInfo(order) {
+        wxHelper.navigateTo('../product/product', {
+          kind: order.kind,
+          id: order.product,
+          type: order.type
+        });
+      },
+
+      async deleteOrder(item) {
+        let rsp = await api.deleteCart(item.id);
+        if (rsp.statusCode === 204) {
+          const oldOrder = JSON.stringify(this.order);
+          const newOrder = JSON.parse(oldOrder);
+          this.order = newOrder.filter(i => i.id !== item.id);
+          this.$app.$options.globalData.cart = this.$app.$options.globalData.cart - 1;
+          wx.setTabBarBadge({
+            index: 2,
+            text: this.$app.$options.globalData.cart.toString()
+          });
+          wx.showToast({
+            title: '删除成功',
+            icon: 'success'
+          });
+        }
+      }
+    },
+
+    onShareAppMessage() {
+      let id = this.$app.$options.globalData.userInfo.id;
+      return {
+        title: '女神家',
+        path: `/pages/tabIndex/tabIndex?t=f&v=${id}`
+      };
+    }
+  });
+</script>
+<config>
+{
+    usingComponents: {
+      navigationBar: '~@/components/navigationBar/navigationBar',
+    }
+}
+</config>

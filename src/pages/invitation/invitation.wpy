@@ -1,0 +1,198 @@
+<style>
+.body {
+  width: 590rpx;
+  height: 584rpx;
+  border-top-left-radius: 12rpx;
+  border-top-right-radius: 12rpx;
+  margin-top: 80rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  background-image: radial-gradient(
+      circle at top left,
+      transparent 0rpx,
+      #fff 0rpx
+    ),
+    radial-gradient(circle at top right, transparent 0rpx, #fff 0rpx),
+    radial-gradient(circle at bottom right, transparent 26rpx, #fff 28rpx),
+    radial-gradient(circle at bottom left, transparent 26rpx, #fff 28rpx);
+  background-repeat: no-repeat;
+  background-size: 51% 51%;
+  background-position: left top, right top, right bottom, left bottom;
+}
+.title {
+  width: 590rpx;
+  height: 304rpx;
+  background-image: radial-gradient(
+      circle at top left,
+      transparent 26rpx,
+      #f7fbff 28rpx
+    ),
+    radial-gradient(circle at top right, transparent 26rpx, #f7fbff 28rpx),
+    radial-gradient(circle at bottom right, transparent 0rpx, #f7fbff 0rpx),
+    radial-gradient(circle at bottom left, transparent 0rpx, #f7fbff 0rpx);
+  background-repeat: no-repeat;
+  background-size: 51% 51%;
+  background-position: left top, right top, right bottom, left bottom;
+  border-bottom-left-radius: 12rpx;
+  border-bottom-right-radius: 12rpx;
+  font-size: 36rpx;
+  color: #000000;
+  box-shadow: 0rpx 35rpx 0rpx -20rpx rgba(255, 255, 255, 0.7),
+    0rpx 55rpx 0rpx -30rpx rgba(255, 255, 255, 0.5);
+}
+.img {
+  width: 510rpx;
+  height: 510rpx;
+  margin: 40rpx 0;
+  padding: 20px;
+  border-radius: 50%;
+  background-color: #fff;
+}
+.button {
+  width: 40%;
+  height: 80rpx;
+  line-height: 80rpx;
+  background: #ec6867;
+  border-radius: 12rpx;
+  text-align: center;
+}
+.m_button-line {
+  display: flex;
+  width: 100%;
+  justify-content: center;
+}
+.m_button-line-1 {
+  width: 2%;
+  background-color: #ec6867;
+  border-bottom: 1rpx solid #ec6867;
+}
+.m_button-line-2 {
+  width: 1.9%;
+  background-color: white;
+  border-bottom: 1rpx solid white;
+}
+</style>
+<template>
+  <view>
+    <navigation bgColor="back-col1"
+                isHome="{{true}}">
+      <view slot="content">
+        <text class="text-col fz36">{{sign}}</text>
+      </view>
+    </navigation>
+
+    <view class="back-col1 col-t"
+          style="height: calc(100vh - {{CustomBar}}px);">
+      <view class="body">
+        <image class="img"
+               src="{{code?temp:''}}{{code}}" />
+      </view>
+      <view class="m_button-line">
+        <block wx:for="i <= 4"
+               wx:key="i">
+          <view class="m_button-line-1"></view>
+          <view class="m_button-line-2"></view>
+          <view class="m_button-line-1"></view>
+          <view class="m_button-line-2"></view>
+          <view class="m_button-line-1"></view>
+          <view class="m_button-line-2"></view>
+        </block>
+      </view>
+      <view class="title row flex-around">
+        <view class="button back-col fz27 cfff"
+              v-on:click.stop="toMerchant">
+          返回到商户小程序
+        </view>
+        <view class="button back-col fz27 cfff"
+              v-on:click.stop="save">
+          保存到本地
+        </view>
+      </view>
+    </view>
+    <wxOpenSetting v-if="wxSettingDisplay"
+                   :wxAuthSetting.sync="wxAuthSetting"
+                   @wxSetting-reject="reject"
+                   @wxSetting-permit="permit" />
+  </view>
+</template>
+<script>
+import wepy from '@wepy/core';
+import api, { url } from '../../config/api';
+import util from '../../utils/util';
+import { getTemp } from '../../config/storage';
+import wxHelper from '../../utils/wxHelper';
+
+wepy.page({
+  data: {
+    temp: '',
+    code: '',
+    CustomBar: 0,
+    wxAuthSetting: {},
+    wxSettingDisplay: false
+  },
+  async onLoad() {
+    while (!('host' in url)) {
+      await util.sleep(1000);
+    }
+    this.temp = `${getTemp()}/wx/`;
+    this.CustomBar = this.$app.$options.globalData.barSize.customBar;
+    this.getCode();
+  },
+  methods: {
+    async getCode() {
+      let rsp = await api.getPromote();
+      this.code = rsp.data;
+    },
+    toMerchant() {
+      console.log('213');
+      wxHelper.navigateBackMiniProgram({});
+    },
+    async save() {
+      let tempFileCode = `${this.temp}${this.code}`;
+      try {
+        let res = await wxHelper.getImageInfo({
+          src: tempFileCode
+        });
+        await wxHelper.saveImageToPhotosAlbum({
+          filePath: res.path
+        });
+        wx.showToast({
+          title: '保存成功',
+          icon: 'success'
+        });
+        this.isHide = false;
+      } catch (e) {
+        if (
+          e.errMsg === 'saveImageToPhotosAlbum:fail auth deny' ||
+          e.errMsg === 'saveImageToPhotosAlbum:fail:auth denied' ||
+          e.errMsg === 'getImageInfo:fail download image fail' ||
+          e.errMsg === 'saveImageToPhotosAlbum:fail authorize no response'
+        ) {
+          this.wxAuthSetting = {
+            title: '微信授权',
+            content: '保存图片需要授权相册,是否允许',
+            openType: 'openSetting'
+          };
+          this.wxSettingDisplay = true;
+        }
+      }
+    },
+    reject(e) {
+      this.wxSettingDisplay = false;
+    },
+    permit(e) {
+      this.wxSettingDisplay = false;
+    }
+  }
+});
+</script>
+<config>
+{
+    usingComponents: {
+      navigation: '~@/components/navigationBar/navigationBar',
+      wxOpenSetting: '~@/components/wxAuthorize/wxOpenSetting',
+    }
+}
+</config>

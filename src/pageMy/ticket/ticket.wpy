@@ -1,0 +1,145 @@
+<style lang='less'>
+page {
+  background-color: #f8f8f8;
+}
+
+.head {
+  width: 100%;
+}
+
+.content {
+  margin-top: 70rpx;
+}
+
+.body {
+  width: 690rpx;
+  margin: 40rpx 30rpx 0;
+}
+
+.cost {
+  margin-top: -280rpx;
+  padding: 0rpx 64rpx;
+  align-items: flex-end;
+}
+
+.full {
+  margin-top: 48rpx;
+  margin-left: 40rpx;
+}
+
+.state {
+  width: 120rpx;
+  height: 120rpx;
+  border-radius: 50%;
+  border: 6rpx solid #999;
+}
+</style>
+
+<template>
+  <view>
+    <navigationBar bgColor="back-col1"
+                   isBack="{{true}}">
+      <view slot="content">
+        <text class="text-col">优惠券</text>
+      </view>
+    </navigationBar>
+    <view class="head">
+      <tabTop :tabs="tabs"
+              :currentTab.sync="currentTab"
+              @tab-change="tabChange" />
+    </view>
+    <view class="body">
+      <view v-if="currentTab===0">
+        <view v-for="(item,index) in unusedTicket">
+          <view class="cfff"
+                style="width: 690rpx;height: 292rpx;margin-bottom:20rpx;">
+            <img style="width: 690rpx;height: 292rpx;z-index:-1;"
+                 src="../../resources/image/nouse.png" />
+            <view class="cost row-l">
+              <view class="fz96">{{item.value}}{{item.unit}}</view>
+            </view>
+            <view class="full">
+              <view class="fz32">
+                此优惠券满{{item.condition}}可用
+              </view>
+              <view class="fz24">
+                This Coupon Is Available At Least {{item.condition}} Yuan
+              </view>
+            </view>
+          </view>
+        </view>
+      </view>
+      <view v-else>
+        <view v-for="(item,index) in usedExpired">
+          <view class="c999"
+                style="width: 690rpx;height: 292rpx;margin-bottom:20rpx;">
+            <img style="width: 690rpx;height: 292rpx;z-index:-1;"
+                 src="../../resources/image/used.png" />
+            <view class="cost row flex-between">
+              <view class="fz96">{{item.value}}{{item.unit}}</view>
+              <view class="state fz30 row">{{item.state}}</view>
+            </view>
+            <view class="full">
+              <view class="fz32">
+                此优惠券满{{item.condition}}可用
+              </view>
+              <view class="fz24">
+                This Coupon Is Available At Least {{item.condition}} Yuan
+              </view>
+            </view>
+          </view>
+        </view>
+      </view>
+    </view>
+  </view>
+</template>
+
+<script>
+import wepy from '@wepy/core';
+import api from '../../config/api';
+
+wepy.page({
+  data: {
+    tabs: ['未使用', '已使用/已过期'],
+    currentTab: 0,
+    unusedTicket: [],
+    usedExpired: []
+  },
+  onLoad() {
+    this.getCoupon();
+  },
+  methods: {
+    tabChange(e) {
+      const { index } = e;
+      if (this.currentTab === index) {
+        return;
+      }
+      this.currentTab = index;
+    },
+    async getCoupon() {
+      let rsp = await api.getCoupon();
+      if (rsp.statusCode === 200) {
+        let ticket = rsp.data;
+        this.unusedTicket = ticket.filter(i => i.state === '可用');
+        this.usedExpired = ticket.filter(i => i.state !== '可用');
+      }
+    }
+  },
+  onShareAppMessage() {
+    let id = this.$app.$options.globalData.userInfo.id;
+    return {
+      title: '女神家',
+      path: `/pages/tabIndex/tabIndex?t=f&v=${id}`
+    };
+  }
+});
+</script>
+
+<config>
+{
+    usingComponents: {
+      navigationBar: '~@/components/navigationBar/navigationBar',
+      tabTop: '~@/components/tabTop/tabTop',
+    }
+}
+</config>

@@ -1,0 +1,66 @@
+<style lang='less'>
+  .row {
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    align-items: center;
+  }
+
+  .tab-content {
+    width: 100%;
+    justify-content: flex-start;
+    background-color: #fff;
+  }
+
+  .tab-content > view {
+    text-align: center;
+    width: 100%;
+    height: 70rpx;
+    line-height: 70rpx;
+  }
+
+  .tab-select {
+    color: #ec6867;
+    border-bottom: 1px solid #ec6867;
+  }
+
+  .scroll-x {
+    overflow-x: scroll;
+    height: 70rpx;
+  }
+
+  .nav {
+    white-space: nowrap;
+  }
+</style>
+
+<template>
+  <view class="row tab-content scroll-x nav">
+    <view v-for="(item,index) in tabs"
+          v-on:click="onTabChange(item,index)"
+          class="{{index===currentTab?'tab-select':''}}">
+      {{item}}
+    </view>
+  </view>
+</template>
+
+<script>
+  import wepy from '@wepy/core';
+  wepy.component({
+    options: {
+      multipleSlots: true // 在组件定义时的选项中启用多slot支持
+    },
+
+    props: {
+      tabs: Object,
+      currentTab: {
+        type: Number
+      }
+    },
+    methods: {
+      onTabChange(item, index) {
+        this.$emit('tab-change', { item, index });
+      }
+    }
+  });
+</script>

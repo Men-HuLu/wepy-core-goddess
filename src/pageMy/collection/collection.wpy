@@ -1,0 +1,182 @@
+<style lang="less">
+  page {
+    background-color: #fff;
+  }
+
+  .order {
+    align-items: stretch;
+    width: 700rpx;
+    margin-top: 20rpx;
+    background-color: #fff;
+    border-radius: 12rpx;
+  }
+
+  .order > view {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12rpx 20rpx;
+    color: #ccc;
+    font-size: 28rpx;
+  }
+
+  .text {
+    font-size: 38rpx;
+  }
+
+  .btn {
+    border-top: 1rpx solid #eee;
+    margin-left: 20rpx;
+    padding: 8rpx;
+  }
+</style>
+
+<template>
+  <view>
+    <navigationBar bgColor="back-col1"
+                   isBack="{{true}}">
+      <view slot="content">
+        <text class="text-col">订单</text>
+      </view>
+    </navigationBar>
+    <view class="col"
+          style="width: 100%">
+      <view v-for="(item,index) in order">
+        <view class="order col">
+          <view>
+            <text>客户昵称</text>
+            <text>{{item.name}}</text>
+          </view>
+          <view>
+            <text>订单金额</text>
+            <text class="fz40 c333">￥{{item.price+item.add_price}}</text>
+          </view>
+          <view>
+            <text>交易时间</text>
+            <text>{{item.date}}</text>
+          </view>
+          <view>
+            <text>商户单号</text>
+            <text>{{item.id}}</text>
+          </view>
+          <view class="row-r btn">
+            <label class="text-col1 fz30">操作</label>
+          </view>
+        </view>
+      </view>
+    </view>
+    <wxPhone v-if="wxPhoneDisplay"
+             :wxAuthSetting="wxPhoneSetting"
+             @wxPhone-reject="reject"
+             @wxPhone-permit="permit" />
+  </view>
+</template>
+
+<script>
+  import wepy from '@wepy/core';
+  import api from '../../config/api';
+  // import wxHelper from '../../utils/wxHelper';
+
+  wepy.page({
+    data: {
+      sign: '',
+      order: [],
+      wxPhoneDisplay: false,
+      wxPhoneSetting: {
+        title: '微信授权',
+        content: '查询订单需要授权手机,是否允许',
+        openType: 'getPhoneNumber'
+      }
+    },
+
+    onLoad(e) {
+      this.sign = this.$app.$options.globalData.sign;
+    },
+
+    onShow() {
+      let phone = this.$app.$options.globalData.userInfo.phone;
+      if (!phone) {
+        this.wxPhoneDisplay = true;
+        return;
+      }
+      this.readOrder();
+    },
+
+    methods: {
+      async readOrder(isLoad = false) {
+        if (isLoad) {
+          this.order = [];
+        }
+        const skip = this.order.length;
+        const take = 20;
+        let rsp = await api.readOrder(skip, take);
+        if (rsp.statusCode === 200) {
+          this.order = [...this.order].concat(rsp.data);
+        }
+      },
+
+      // toOrderInfo(order) {
+      //   wxHelper.navigateTo('../orderInfo/orderInfo', {
+      //     id: order.id
+      //   });
+      // },
+
+      reject(e) {
+        this.wxPhoneDisplay = false;
+      },
+
+      async permit(e) {
+        if (e.$wx.detail.errMsg !== 'getPhoneNumber:ok') {
+          wx.showToast({
+            title: e.$wx.detail.errMsg,
+            icon: 'none'
+          });
+          return;
+        }
+        try {
+          let rsp = await api.modifyPhone(
+            e.$wx.detail.encryptedData,
+            e.$wx.detail.iv
+          );
+          if (rsp.statusCode === 200) {
+            this.$app.$options.globalData.userInfo.phone = rsp.data;
+          }
+          this.wxPhoneDisplay = false;
+          this.readOrder();
+        } catch (e) {
+          wx.showToast({
+            title: `微信绑定失败，错误详情:${e.message}`,
+            icon: 'none'
+          });
+          return;
+          this.wxPhoneDisplay = false;
+        }
+      }
+    },
+
+    onPullDownRefresh() {
+      this.readOrder(true);
+      setTimeout(() => {
+        wx.stopPullDownRefresh();
+      }, 1000);
+    },
+
+    onShareAppMessage() {
+      let id = this.$app.$options.globalData.userInfo.id;
+      return {
+        title: '女神家',
+        path: `/pages/tabIndex/tabIndex?t=f&v=${id}`
+      };
+    }
+  });
+</script>
+
+<config>
+{
+    usingComponents: {
+      navigationBar: '~@/components/navigationBar/navigationBar',
+      wxPhone: '~@/components/wxAuthorize/wxPhone',
+    }
+}
+</config>

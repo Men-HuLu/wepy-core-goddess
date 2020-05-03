@@ -1,0 +1,47 @@
+<style lang="less">
+.marginTop {
+  margin: 20rpx 0;
+}
+
+.row {
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  align-items: center;
+}
+
+.line {
+  width: 120rpx;
+  height: 2rpx;
+  background-color: #ccc;
+}
+
+.fz24 {
+  font-size: 24rpx;
+}
+
+.c999 {
+  color: #999;
+}
+</style>
+
+<template>
+  <view class="row marginTop">
+    <view class="line"/>
+    <text class="fz24 c999">{{content}}</text>
+    <view class="line"/>
+  </view>
+</template>
+
+<script>
+import wepy from '@wepy/core';
+
+wepy.component({
+  props: {
+    content: {
+      type: String,
+      default: '我也是有底线的'
+    }
+  }
+});
+</script>

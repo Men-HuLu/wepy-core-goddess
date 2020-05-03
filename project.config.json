@@ -1,0 +1,100 @@
+{
+  "description": "女神家消费者小程序",
+  "setting": {
+    "urlCheck": false,
+    "es6": false,
+    "postcss": false,
+    "minified": false,
+    "newFeature": true,
+    "coverView": true,
+    "autoAudits": false,
+    "checkInvalidKey": true,
+    "checkSiteMap": true,
+    "uploadWithSourceMap": true,
+    "babelSetting": {
+      "ignore": [],
+      "disablePlugins": [],
+      "outputPath": ""
+    }
+  },
+  "compileType": "miniprogram",
+  "appid": "",
+  "projectname": "goddess-customer",
+  "miniprogramRoot": "weapp/",
+  "simulatorType": "wechat",
+  "simulatorPluginLibVersion": {},
+  "libVersion": "2.9.1",
+  "condition": {
+    "search": {
+      "current": -1,
+      "list": []
+    },
+    "conversation": {
+      "current": -1,
+      "list": []
+    },
+    "plugin": {
+      "current": -1,
+      "list": []
+    },
+    "game": {
+      "list": []
+    },
+    "gamePlugin": {
+      "current": -1,
+      "list": []
+    },
+    "miniprogram": {
+      "current": 2,
+      "list": [
+        {
+          "id": 0,
+          "name": "用户",
+          "pathName": "pages/tabIndex/tabIndex",
+          "query": "t=p&v=1",
+          "scene": 1011
+        },
+        {
+          "id": 1,
+          "name": "小程序进入",
+          "pathName": "pages/tabIndex/tabIndex",
+          "query": "t=p&v=1",
+          "scene": 1037,
+          "referrerInfo": {
+            "appId": "wx5d79ee70b6b2d74d",
+            "extraData": "{\"name\":\"1\"}"
+          }
+        },
+        {
+          "id": 2,
+          "name": "跳转",
+          "pathName": "pages/invitation/invitation",
+          "query": "t=z&v=50133",
+          "scene": 1037,
+          "referrerInfo": {
+            "appId": "wx5d79ee70b6b2d74d",
+            "extraData": "{\"name\":\"1\"}"
+          }
+        },
+        {
+          "id": -1,
+          "name": "支付",
+          "pathName": "pages/payment/payment",
+          "query": "m=2&s=3",
+          "scene": 1011
+        },
+        {
+          "id": 4,
+          "name": "小程序进入详情页",
+          "pathName": "pages/product/product",
+          "query": "t=f&v=510&id=951&kind=4352&type=面料",
+          "scene": 1037,
+          "referrerInfo": {
+            "appId": "wx5d79ee70b6b2d74d",
+            "extraData": "{\"name\":\"1\"}"
+          }
+        }
+      ]
+    }
+  }
+}

@@ -1,0 +1,488 @@
+<style lang="less">
+page {
+  padding-bottom: 100rpx;
+}
+.swiper {
+  height: 908rpx;
+  margin: 0rpx;
+}
+.singPic {
+  width: 100%;
+  display: block;
+}
+
+image {
+  display: block;
+  font-size: 0;
+}
+
+.bottom {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  height: 100rpx;
+  width: 100%;
+  box-shadow: 0 0 6rpx rgba(225, 225, 225, 0.8);
+  background-color: #fffbfb;
+}
+
+.bottom-button {
+  height: 72rpx;
+  width: 360rpx;
+  border-radius: 36rpx;
+  background-image: linear-gradient(90deg, #eb6866 16%, #ff8764 89%);
+}
+
+.modal-back {
+  width: 100%;
+  margin-bottom: 70rpx;
+  padding: 20rpx 30rpx;
+  background-color: #fffbfb;
+}
+
+.modal-first-pic {
+  width: 100%;
+}
+
+.modal-first-img {
+  width: 160rpx;
+  height: 160rpx;
+  border-radius: 8rpx;
+}
+
+.modal-first-name {
+  margin-top: 20rpx;
+}
+
+.modal-sku-pic {
+  position: relative;
+  width: 120rpx;
+  height: 120rpx;
+  margin-bottom: 18rpx;
+  margin-right: 18rpx;
+}
+
+.modal-sku-name {
+  position: absolute;
+  width: 100%;
+  left: 0;
+  bottom: 0;
+  text-align: center;
+  border-radius: 8rpx;
+}
+
+.modal-sku-back {
+  background-color: rgba(0, 0, 0, 0.2);
+}
+
+.modal-img {
+  width: 120rpx;
+  height: 120rpx;
+  border-radius: 8rpx;
+}
+
+.scroll {
+  max-height: 500rpx;
+  width: 100%;
+  overflow-y: scroll;
+}
+
+.product_info {
+  width: 100%;
+  padding: 40rpx 30rpx;
+  background-color: #fff;
+}
+
+.price {
+  color: #eb6866;
+}
+
+.detail_info {
+  margin-top: 20rpx;
+}
+
+.image_change {
+  width: 48rpx;
+  height: 48rpx;
+}
+
+.image_merchant {
+  width: 56.6rpx;
+  height: 48rpx;
+}
+
+.btn_share {
+  width: 50rpx;
+  height: 76rpx;
+  padding: 0;
+  margin: 0;
+  line-height: normal;
+  background-color: #fffbfb;
+}
+
+.btn_share::after {
+  width: 50rpx;
+  height: 76rpx;
+  border: none;
+}
+
+.image_share {
+  width: 41.2rpx;
+  height: 48rpx;
+  padding: 0;
+  margin: 0;
+  display: block;
+}
+
+.text_jus {
+  text-align: justify;
+}
+
+.modal_bottom {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  height: 100rpx;
+  width: 100%;
+}
+
+.moadl_bottom-button {
+  height: 72rpx;
+  width: 690rpx;
+  border-radius: 36rpx;
+  background-image: linear-gradient(90deg, #eb6866 16%, #ff8764 89%);
+}
+
+.modal-price-name {
+  margin-left: 40rpx;
+}
+
+.modal-price {
+  color: #eb6866;
+}
+
+.color-classify {
+  margin-bottom: 20rpx;
+}
+</style>
+
+<template>
+  <view>
+    <navigation bgColor="back-col1"
+                isBack="{{isBack}}"
+                isHome="{{isHome}}">
+      <view slot="content">
+        <text class="text-col">详情页</text>
+      </view>
+    </navigation>
+    <!-- 轮播图 -->
+    <swiper class="swiper"
+            indicator-dots="true"
+            circular="true"
+            autoplay="{{attribute.autoplay}}"
+            vertical="{{attribute.vertical}}"
+            interval="{{attribute.interval*1000}}"
+            duration="{{attribute.duration*1000}}">
+      <block v-for="item,index in head_pics">
+        <swiper-item>
+          <image src="{{base}}{{item}}"
+                 lazy-load="{{true}}"
+                 style="width: 750rpx;"
+                 mode="widthFix" />
+        </swiper-item>
+      </block>
+    </swiper>
+
+    <!-- 详情信息 -->
+    <view class="col-t product_info">
+      <view class="row flex-between response">
+        <view class="fz32 c333">{{product.name}}</view>
+        <view class="fz24 price">￥{{price}}元/{{unit}}</view>
+      </view>
+      <view class="vertical-lt response detail_info">
+        <view class="fz28 c666" v-for="(item,index) in product.info">{{item}}</view>
+      </view>
+    </view>
+    <!-- 详情页 -->
+    <image lazy-load="{{true}}"
+           class="singPic"
+           mode="widthFix"
+           v-for="item,index in detail_pics"
+           src="{{base}}{{item}}" />
+    <!-- 底部按钮 -->
+    <view class="row flex-around bottom">
+      <view class="col"
+            v-on:click="choose">
+        <image class="image_change"
+               src="../../resources/image/change_curtain.png" />
+        <text class="fz20 c666">换装</text>
+      </view>
+      <view class="col"
+            v-on:click="toShop(product.id)">
+        <image class="image_merchant"
+               src="../../resources/image/shop_cart.png" />
+        <text class="fz20 c666">购物车</text>
+      </view>
+      <button class="btn_share col-t"
+              open-type="share">
+        <image class="image_share"
+               src="../../resources/image/share.png" />
+        <text class="fz20 c666">分享</text>
+      </button>
+      <view class="row bottom-button"
+            v-on:click="showModal">
+        <text class="fz28 cfff text_jus">加入购物车</text>
+      </view>
+    </view>
+
+    <!-- 加购模态框 -->
+    <bottomModal :visible.sync="isHide"
+                 @modal-close="modalClose">
+      <view class="col vertical-lt modal-back">
+        <view class="row-l vertical-lt modal-first-pic">
+          <image class="modal-first-img"
+                 src="{{base}}{{currentFirstSrc}}" />
+          <view class="modal-price-name">
+            <view class="modal-price fz24">
+              ￥{{price}}元/{{unit}}
+            </view>
+            <view class="modal-first-name c999 fz24">
+              {{product.name}}
+            </view>
+          </view>
+
+        </view>
+        <view class="col vertical-lt">
+          <text class="color-classify fz24 c333">
+            颜色分类
+          </text>
+          <view class="row-l wrap scroll">
+            <view class="modal-sku-pic"
+                  v-for="(item,index) in product.kinds"
+                  v-on:click="onChangeSku(item,index)">
+              <image src="{{base}}{{item.pic_k}}"
+                     class="modal-img" />
+              <view class="modal-sku-name fz20 cfff text-col {{currentKind===item.id?'back-col1':'modal-sku-back'}}">
+                {{item.id}}
+              </view>
+            </view>
+          </view>
+        </view>
+      </view>
+      <view class="row back-col modal_bottom">
+        <view class="row moadl_bottom-button"
+              v-on:click="confirm">
+          <text class="fz28 cfff">确认</text>
+        </view>
+      </view>
+    </bottomModal>
+  </view>
+</template>
+
+<script>
+  import wepy from '@wepy/core';
+  import api from '../../config/api';
+  import util from '../../utils/util';
+  import { getBase, getTemp } from '../../config/storage';
+  import wxHelper from '../../utils/wxHelper';
+  import ossHelper from '../../utils/ossHelper';
+
+  wepy.page({
+    data: {
+      attribute: {
+        id: 0,
+        autoplay: true,
+        interval: 5,
+        duration: 2
+      },
+      base: '',
+
+      productId: 0,
+      currentKind: 0,
+      currentType: '',
+      currentFirstSrc: '',
+      product: {},
+
+      head_pics: [],
+      detail_pics: [],
+      price: 0,
+      unit: '',
+
+      isHide: false,
+      isBack: false,
+      isHome: false
+    },
+    async onLoad(e) {
+      while (this.$app.$options.globalData.menu.length <= 0) {
+        await util.sleep(1000);
+      }
+      if (e.t) {
+        this.isHome = true;
+      } else {
+        this.isBack = true;
+      }
+      this.currentKind = item.id;
+      this.currentType = item.type;
+      this.changeSku();
+    },
+    changeSku() {
+      let singleKind = this.product.kinds.filter(
+        i => i.id === this.currentKind && i.type === this.currentType
+      )[0];
+      this.head_pics = singleKind.pic_c;
+      this.currentFirstSrc = singleKind.pic_a;
+      let selectedAdditions = singleKind.additions
+        .filter(i => i.selected)
+        .map(i => i.price);
+      const selectedAdditionsSum =
+        selectedAdditions.length > 0
+          ? selectedAdditions.reduce(
+              (accumulator, currentValue) => accumulator + currentValue
+            )
+          : 0;
+      this.price = Math.floor(
+        (singleKind.pack_price - selectedAdditionsSum) *
+          this.$app.$options.globalData.priceRate
+      );
+      let unit = '';
+      switch (this.product.type) {
+        case '成品':
+          unit = singleKind.prop.unit;
+          break;
+        case '墙布':
+        case '功能帘':
+        case '飘窗垫':
+          unit = '平';
+          break;
+        case '抱枕套':
+          unit = '个';
+          break;
+        case '面料':
+        case '窗幔':
+        case '杆轨':
+        default:
+          unit = '米';
+          break;
+      }
+      this.unit = unit;
+    },
+
+    showModal() {
+      this.isHide = true;
+    },
+    modalClose() {
+      this.isHide = false;
+    },
+
+    async confirm() {
+      this.isHide = false;
+      let product = this.product.id;
+      let type = this.currentType;
+      let kind = this.currentKind;
+      let rsp = await api.postCart(product, type, kind);
+      this.$app.$options.globalData.cart =
+        this.$app.$options.globalData.cart + 1;
+      if (rsp.statusCode === 204) {
+        wx.showToast({
+          title: '加入购物车成功',
+          icon: 'success'
+        });
+      }
+    },
+    /**
+     * @ 试装
+     */
+    async getPolicy() {
+      let ossAuthPersist = this.$app.$options.globalData.ossAuthPersist;
+      if (
+        !ossAuthPersist.expiration ||
+        new Date(ossAuthPersist.expiration) < new Date()
+      ) {
+        let rsp = await api.ossGet();
+        if (rsp.statusCode === 200) {
+          this.$app.$options.globalData.ossAuthPersist = {
+            host: getTemp(),
+            ...rsp.data
+          };
+        }
+        ossAuthPersist = this.$app.$options.globalData.ossAuthPersist;
+      }
+      return ossAuthPersist;
+    },
+    async choose() {
+      let tempFilePaths = '';
+      try {
+        let res = await wxHelper.chooseImage({
+          count: 1,
+          sizeType: 'original'
+        });
+        if (res.errMsg !== 'chooseImage:ok') {
+          wxHelper.showToast({
+            title: '选择图片失败',
+            icon: 'none'
+          });
+          return;
+        }
+        tempFilePaths = res.tempFilePaths[0];
+      } catch (error) {
+        if (error.errMsg === 'chooseImage:fail cancel') {
+          wxHelper.showToast({
+            title: '未选择图片',
+            icon: 'none'
+          });
+          return;
+        }
+      }
+      wx.showLoading({
+        title: '预览准备中……'
+      });
+      let backgroundName;
+      try {
+        let auth = await this.getPolicy();
+        let name = ossHelper.convertName(tempFilePaths, new Date().getTime());
+        backgroundName = await ossHelper.postOss(
+          tempFilePaths,
+          auth,
+          `room${name}`
+        );
+      } catch (e) {
+        wxHelper.showToast({
+          title: e.message,
+          icon: 'none'
+        });
+      }
+      wx.hideLoading();
+      if (backgroundName) {
+        let arr = backgroundName.split('/');
+        wxHelper.navigateTo('../../pageIndex/previewCurtain/previewCurtain', {
+          background: arr[arr.length - 1],
+          productId: this.product.id
+        });
+      }
+    },
+
+    toShop() {
+      wxHelper.switchTab('../tabShopCart/tabShopCart');
+    }
+  },
+  onShareAppMessage() {
+    let id = this.$app.$options.globalData.userInfo.id;
+    let productId = this.productId;
+    let kind = this.currentKind;
+    let type = this.currentType;
+    return {
+      titile: '女神家',
+      path: `/page/product/product?t=f&v=${id}&id=${productId}&kind=${kind}&type=${type}`
+    };
+  }
+});
+</script>
+
+<config>
+{
+    usingComponents: {
+      navigation: '~@/components/navigationBar/navigationBar',
+      bottomModal: '~@/components/bottomModal/bottomModal'
+    }
+}
+</config>

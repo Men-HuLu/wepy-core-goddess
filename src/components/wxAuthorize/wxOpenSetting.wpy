@@ -1,0 +1,126 @@
+<style lang="less">
+.modal-back {
+  position: fixed;
+  top: 0;
+  left: 0;
+  background: rgba(0, 0, 0, 0.1);
+  width: 750rpx;
+  height: 100vh;
+  z-index: 99999;
+}
+
+.modal {
+  width: 550rpx;
+  border-radius: 10rpx;
+}
+
+.modal > view {
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.modal-title {
+  padding: 12rpx;
+}
+
+.modal-body {
+  padding: 20rpx 20rpx 30rpx 20rpx;
+  border-bottom: 1rpx solid #eee;
+}
+
+.modal-button {
+  width: 50%;
+  background: #fff;
+}
+
+button::after {
+  border: 0;
+}
+
+.row {
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  align-items: center;
+}
+
+.col {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+
+.back-col {
+  background-color: #fff;
+}
+
+.c333 {
+  color: #333;
+}
+
+.c999 {
+  color: #999;
+}
+
+.fz36 {
+  font-size: 36rpx;
+}
+
+.fz30 {
+  font-size: 30rpx;
+}
+</style>
+<template>
+  <view class="row modal-back">
+    <view class="col modal back-col c333">
+      <view class="row fz36 modal-title">
+        {{wxAuthSetting.title}}
+      </view>
+      <view class="row c999 fz30 modal-body">
+        {{wxAuthSetting.content}}
+      </view>
+      <view class="row">
+        <button
+          class="modal-button"
+          @click.stop="reject"
+        >拒绝</button>
+        <button
+          class="modal-button"
+          open-type="{{wxAuthSetting.openType}}"
+          style="border-left:1rpx solid #eee;-webkit-border-top-left-radius:0rpx;-webkit-border-bottom-left-radius:0rpx;color: #01d00e;"
+          @opensetting="permit"
+        >允许</button>
+      </view>
+    </view>
+  </view>
+</template>
+
+<script>
+import wepy from '@wepy/core';
+
+wepy.component({
+  options: {
+    multipleSlots: true // 在组件定义时的选项中启用多slot支持
+  },
+  properties: {
+    wxAuthSetting: {
+      type: Object,
+      default: {
+        title: '微信授权',
+        content: '保存图片需要授权相册,是否允许',
+        openType: 'openSetting'
+      },
+      twoWay: true
+    }
+  },
+  methods: {
+    reject(e) {
+      this.$emit('wxSetting-reject', e);
+    },
+    permit(e) {
+      this.$emit('wxSetting-permit', e);
+    }
+  }
+});
+</script>

@@ -1,0 +1,339 @@
+<style lang="less">
+  page {
+    background-color: #fff;
+  }
+  image {
+    max-width: none;
+    display: inline-block;
+    position: relative;
+    z-index: 0;
+  }
+
+  .content-head {
+    width: 100%;
+    padding: 25rpx 25rpx;
+    box-sizing: border-box;
+  }
+
+  .content-body {
+    width: 100%;
+    padding: 20rpx;
+    box-sizing: border-box;
+  }
+
+  button::after {
+    border: none;
+  }
+
+  .canvasmodal {
+    margin-top: 100rpx;
+    width: 690rpx;
+    border-radius: 6rpx;
+    z-index: 4;
+  }
+
+  .canvasmodal-top {
+    width: 100%;
+    padding: 10rpx;
+  }
+
+  .canvasmodal-bottom {
+    width: 100%;
+    border-top: 1rpx solid #ccc;
+    padding: 30rpx;
+  }
+
+  /*第二版css*/
+  .card {
+    position: relative;
+    width: 696rpx;
+    height: 402rpx;
+    background: #eee;
+    border-radius: 25rpx;
+    padding: 0;
+    margin: 0;
+    overflow: hidden;
+    box-shadow: 0 0 10rpx 10rpx #ccc;
+  }
+
+  .card-left {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 346rpx;
+    height: 100%;
+    z-index: 0;
+  }
+
+  .card-center {
+    position: absolute;
+    left: 245rpx;
+    top: 0;
+    width: 24rpx;
+    height: 0;
+    border-left: 102rpx solid transparent;
+    border-bottom: 402rpx solid #eee;
+    z-index: 2;
+  }
+
+  .card-right {
+    position: absolute;
+    left: 255rpx;
+    top: 0;
+    width: 440rpx;
+    height: 0;
+    border-left: 101rpx solid transparent;
+    border-bottom: 402rpx solid #fff;
+    z-index: 3;
+  }
+
+  .card-bottom {
+    margin-top: 30rpx;
+    width: 100%;
+  }
+
+  .card-bottom > button {
+    width: 320rpx;
+    border: 4rpx solid #ec6867;
+    border-radius: 18rpx;
+  }
+
+  .card-image-code {
+    position: absolute;
+    right: 20rpx;
+    top: 10rpx;
+    width: 50rpx;
+    height: 50rpx;
+  }
+
+  .card-image {
+    position: absolute;
+    left: -52rpx;
+    top: 79rpx;
+    width: 394rpx;
+    height: 124rpx;
+    max-width: none;
+  }
+
+  .card-name {
+    position: absolute;
+    left: 10rpx;
+    top: 90rpx;
+    z-index: 3;
+  }
+
+  .card-name {
+    position: absolute;
+    left: 15rpx;
+    top: 98rpx;
+    z-index: 3;
+  }
+
+  .card-name-info {
+    position: absolute;
+    display: flex;
+    justify-content: center;
+    align-items: flex-end;
+    left: 15rpx;
+    top: 150rpx;
+    z-index: 3;
+  }
+
+  .card-info {
+    position: absolute;
+    right: 20rpx;
+    width: 380rpx;
+  }
+
+  .card-info > image {
+    width: 40rpx;
+    height: 40rpx;
+    margin-left: 20rpx;
+  }
+
+  .address {
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    align-items: flex-end;
+  }
+
+  .address-text {
+    width: 320rpx;
+    text-align: right;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+</style>
+
+<template>
+  <view class="col-t vertical-lt">
+    <navigationBar bgColor="back-col1">
+      <view slot="content">
+        <text class="text-col fz36">{{sign}}</text>
+      </view>
+    </navigationBar>
+    <view class="content-head back-col2 col">
+      <view v-if="show_map_button"
+            class="fz20 c666"
+            style="padding-bottom: 22rpx"
+            v-on:click.stop="showMap">点我，返回地图</view>
+      <view class="card">
+        <image v-if="shopInfo.card"
+               class="card-left"
+               src="{{shopInfo.card?temp:''}}{{shopInfo.card}}"
+               mode="aspectFill" />
+        <view class="card-center" />
+        <view class="fz22 card-right">
+          <image class="card-image-code"
+                 src="../../resources/assets/shop_QRcode.png"
+                 mode="aspectFill"
+                 v-on:click.stop="createCard" />
+          <image class="card-image"
+                 src="../../resources/assets/shop_card.png"
+                 mode="aspectFill" />
+          <view class="fz30 card-name">{{shopInfo.name}}</view>
+          <view class="card-name-info">
+            <view class="fz24">{{shopInfo.role==='合伙人'?'店长':'店员'}}</view>
+            <view style="font-size: 16rpx;">{{shopInfo.role==='合伙人'?'SHOPOWNER':'SHOPWORKER'}}</view>
+          </view>
+          <view class="row-r card-info"
+                style="top: 220rpx"
+                v-on:click.stop="call(shopInfo.phone)">
+            <view>{{shopInfo.phone?shopInfo.phone:''}}</view>
+            <image src="../../resources/assets/shop_phone.jpg"
+                   mode="aspectFill" />
+          </view>
+          <view class="row-r card-info"
+                style="top: 270rpx"
+                v-on:click.stop="copy(shopInfo.weixin)">
+            <view>{{shopInfo.weixin?shopInfo.weixin:''}}</view>
+            <image src="../../resources/assets/shop_wechat.jpg"
+                   mode="aspectFill" />
+          </view>
+          <view class="row-r card-info"
+                style="top: 320rpx"
+                v-on:click.stop="path(shopInfo)">
+            <view class="address">
+              <text space="nbsp"
+                    class="address-text"
+                    decode="true">{{shopInfo.province}} {{shopInfo.city}} {{shopInfo.district}}</text>
+              <text space="nbsp"
+                    class="address-text"
+                    decode="true">{{shopInfo.address}}</text>
+            </view>
+            <image src="../../resources/assets/shop_map.jpg"
+                   mode="aspectFill" />
+          </view>
+        </view>
+      </view>
+      <view class="row card-bottom">
+        <button class="text-col1 fz34"
+                open-type="share"
+                mode="aspectFill">
+          分享给好友
+        </button>
+      </view>
+    </view>
+    <view class="content-body back-col2">
+      <singPic :pictures.sync="poster" />
+    </view>
+  </view>
+</template>
+
+<script>
+  import wepy from '@wepy/core';
+  import api from '../../config/api';
+  import { getTemp } from '../../config/storage';
+  import wxHelper from '../../utils/wxHelper';
+
+  wepy.page({
+    data: {
+      sign: '',
+      temp: '',
+      shopInfo: {
+        poster: '',
+        name: '',
+        role: '',
+        phone: '',
+        weixin: '',
+        province: '',
+        city: '',
+        district: '',
+        address: '',
+        card: '',
+        code: ''
+      },
+      poster: []
+    },
+
+    onLoad() {
+      this.sign = this.$app.$options.globalData.sign;
+      this.temp = `${getTemp()}/wx/`;
+    },
+
+    async onShow(e) {
+      let cartText = this.$app.$options.globalData.cart;
+      wx.setTabBarBadge({
+        index: 2,
+        text: String(cartText)
+      });
+      let rsp = await api.business();
+      if (rsp.statusCode === 200) {
+        this.shopInfo = {
+          ...rsp.data
+        };
+        if (Array.isArray(rsp.data.poster)) {
+          this.poster = rsp.data.poster.map(r => `${this.temp}${r}`);
+        }
+      }
+    },
+
+    methods: {
+      async call(phone) {
+        if (this.shopInfo.phone.length !== 11) {
+          wx.showToast({
+            title: '商户未维护电话',
+            icon: 'none'
+          });
+          return;
+        }
+        await wxHelper.makePhoneCall({
+          phoneNumber: this.shopInfo.phone
+        });
+      },
+      copy(weixin) {
+        if (!this.shopInfo.weixin) {
+          wx.showToast({
+            title: '商户未编辑微信',
+            icon: 'none'
+          });
+        }
+        wxHelper.setClipboardData({
+          data: weixin
+        });
+      },
+      path(shopInfo) {
+        console.log(shopInfo);
+      }
+    },
+
+    onShareAppMessage() {
+      let id = this.$app.$options.globalData.userInfo.id;
+      return {
+        title: '女神家',
+        path: `/pages/tabIndex/tabIndex?t=f&v=${id}`
+      };
+    }
+  });
+</script>
+<config>
+{
+    usingComponents: {
+      navigationBar: '~@/components/navigationBar/navigationBar',
+      singPic: '~@/components/picList/singPic',
+      modal: '~@/components/modal/modal',
+    }
+}
+</config>
